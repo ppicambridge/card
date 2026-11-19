@@ -55,6 +55,11 @@ footer{color:var(--muted);font-size:12px;text-align:center}
 .pitem .pk{color:var(--merah);font-weight:600}
 .pitem .pd{color:var(--muted);font-size:13px}
 .pitem a{color:var(--merah);font-size:13px;font-weight:500}
+.join{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.join h2{font-size:19px}
+.join .row{display:flex;flex-direction:column;gap:10px}
+.join .small{font-size:13px;color:var(--muted);margin:0}
+.join .small a{color:var(--merah);font-weight:600}
 .welcome{margin:0;border-left:3px solid var(--merah);padding:2px 0 2px 14px;display:flex;flex-direction:column;gap:8px;color:var(--fg)}
 .welcome p{margin:0}.welcome .close{font:500 16px/1.4 var(--display);color:var(--deep)}
 </style>
@@ -115,6 +120,19 @@ footer{color:var(--muted);font-size:12px;text-align:center}
     <ul class="plist" id="plist"></ul>
   </section>
 
+  <section class="join" id="partner" aria-labelledby="j-title">
+    <h2 id="j-title">Own a business, or know one?</h2>
+    <p class="sub" style="font-size:14px">Become a PPI Cambridge Card partner and welcome our community. Enter your email and we'll send you the partner welcome pack and the application form.</p>
+    <form id="joinForm" class="row" novalidate>
+      <label for="j-email">Email<input id="j-email" type="email" autocomplete="email" placeholder="you@business.co.uk"></label>
+      <label for="j-business">Business name <span class="hint">Optional</span><input id="j-business" maxlength="80"></label>
+      <button type="submit" id="joinBtn">Send me the partner pack</button>
+      <p class="msg bad" id="joinErr" hidden></p>
+      <p class="msg ok" id="joinOk" hidden></p>
+    </form>
+    <p class="small" id="applyDirect" hidden>Ready to apply now? <a id="applyLink" target="_blank" rel="noopener">Fill in the application form</a></p>
+  </section>
+
   <section id="v-exists" hidden><p class="msg ok">You're already registered with this email. We've sent your card link to your inbox. Check spam if it isn't there in a few minutes.</p></section>
 
   <footer>PPI Cambridge · One heritage, one community, wherever we belong.</footer>
@@ -161,7 +179,27 @@ function api(params){
   var q = Object.keys(params).map(function(k){ return k + '=' + encodeURIComponent(params[k]); }).join('&');
   return fetch(API + '?' + q).then(function(r){ return r.json(); });
 }
-api({ api: 'partners' }).then(function(r){ if (r && r.ok) { PARTNERS = r.partners || []; renderPartners(); } }).catch(function(){});
+api({ api: 'partners' }).then(function(r){
+  if (r && r.ok) { PARTNERS = r.partners || []; renderPartners();
+    if (r.formUrl) { $('applyLink').href = r.formUrl; $('applyDirect').hidden = false; } }
+}).catch(function(){});
+$('joinForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var err = $('joinErr'), ok = $('joinOk'), btn = $('joinBtn'); err.hidden = true; ok.hidden = true;
+  var email = $('j-email').value.trim();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err.textContent = 'Enter a valid email address.'; err.hidden = false; return; }
+  btn.disabled = true; btn.textContent = 'Sending…';
+  fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'partnerPack', email: email, business: $('j-business').value.trim() }) })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      btn.disabled = false; btn.textContent = 'Send me the partner pack';
+      if (!res.ok) { err.textContent = res.error || 'Something went wrong. Try again in a moment.'; err.hidden = false; return; }
+      ok.textContent = res.already ? 'We already sent the pack to ' + email + ' today. Check your inbox and spam folder.' : 'Sent! Check ' + email + ' for the welcome pack and application form.';
+      ok.hidden = false; $('joinForm').reset();
+    })
+    .catch(function(){ btn.disabled = false; btn.textContent = 'Send me the partner pack'; err.textContent = "Couldn't reach the PPI server. Check your connection and try again."; err.hidden = false; });
+});
 (function(){
   var sp = new URLSearchParams(location.search), c = sp.get('card'), k = sp.get('key');
   if (!c || !k) return;
