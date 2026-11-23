@@ -57,7 +57,7 @@ footer{color:var(--muted);font-size:12px;text-align:center}
 .flip .card{-webkit-backface-visibility:hidden;backface-visibility:hidden}
 .flip{container-type:inline-size}
 .card.back{position:absolute;inset:0;transform:rotateY(180deg);background:radial-gradient(ellipse 60% 75% at 50% 45%,#960418 0%,#8a0012 60%,#800011 100%);color:#fff7f5;font-family:'IBM Plex Sans',system-ui,sans-serif;display:grid;grid-template-rows:1fr auto;grid-template-columns:none;gap:0;padding:0 6.308cqw 4.673cqw}
-.card.back::after{display:none}
+.card.back::after{z-index:1}
 .back .batik{position:absolute;inset:0;pointer-events:none;background:linear-gradient(rgba(136,0,18,.12),rgba(136,0,18,.12)),var(--batik) right bottom/cover no-repeat}
 .back .batik.left,.back .batik.right{-webkit-mask-image:linear-gradient(to right,transparent 64%,#000 78%);mask-image:linear-gradient(to right,transparent 64%,#000 78%)}
 .back .batik.left{transform:scaleX(-1)}
